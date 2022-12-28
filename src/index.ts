@@ -6,16 +6,47 @@ import {
   RedisScripts,
 } from 'redis';
 import { InvalidatedTokenError } from './errors';
-import { JwtiAPI, JwtiParams } from './interfaces';
+import { JwtiAPI, JwtiInternals, JwtiOptions, JwtiParams } from './interfaces';
 import type { Redis } from 'ioredis';
 
 export class Jwti implements JwtiAPI {
+  internals: JwtiInternals = {
+    suppressErrors: true,
+    allowLogging: true,
+    // eslint-disable-next-line no-console
+    logger: console.log,
+    // eslint-disable-next-line no-console
+    errorLogger: console.error,
+  };
+
   constructor(
     public jwt: typeof Jwt,
     private redis:
       | RedisClientType<RedisDefaultModules & RedisModules, RedisScripts>
       | Redis,
-  ) {}
+    options?: JwtiOptions,
+  ) {
+    this.set(options ?? {});
+  }
+
+  public set(options: JwtiOptions): void {
+    this.internals.allowLogging =
+      options?.internals?.allowLogging ?? this.internals.allowLogging;
+    this.internals.suppressErrors =
+      options?.internals?.suppressErrors ?? this.internals.suppressErrors;
+    this.internals.logger = options?.internals?.logger ?? this.internals.logger;
+    this.internals.errorLogger =
+      options?.internals?.errorLogger ?? this.internals.errorLogger;
+  }
+
+  private handleInternalError(error: unknown): void {
+    if (this.internals.allowLogging) {
+      this.internals.errorLogger(error);
+    }
+    if (!this.internals.suppressErrors) {
+      throw error;
+    }
+  }
 
   private async createTokenInvalidation(token: string): Promise<void> {
     const invalidationTime = +new Date() / 1000;
@@ -23,7 +54,7 @@ export class Jwti implements JwtiAPI {
   }
 
   private async createUserInvalidation(
-    user: string | number | Object,
+    user: string | number | Record<any, any>,
   ): Promise<void> {
     const invalidationTime = +new Date() / 1000;
     const userKey = typeof user === 'string' ? user : JSON.stringify(user);
@@ -33,19 +64,19 @@ export class Jwti implements JwtiAPI {
   }
 
   private async createClientInvalidation(
-    client: string | number | Object,
+    client: string | number | Record<any, any>,
   ): Promise<void> {
     const invalidationTime = +new Date() / 1000;
     const clientKey =
       typeof client === 'string' ? client : JSON.stringify(client);
-    const invalidationKey = `user::${clientKey}`;
+    const invalidationKey = `client::${clientKey}`;
 
     await this.redis.set(invalidationKey, invalidationTime);
   }
 
   private async createUserClientInvalidation(
-    user: string | number | Object,
-    client: string | number | Object,
+    user: string | number | Record<any, any>,
+    client: string | number | Record<any, any>,
   ): Promise<void> {
     const invalidationTime = +new Date() / 1000;
     const userKey = typeof user === 'string' ? user : JSON.stringify(user);
@@ -63,13 +94,13 @@ export class Jwti implements JwtiAPI {
       const invalidationTime = await this.redis.get(token);
       return invalidationTime ? parseFloat(invalidationTime) : null;
     } catch (error) {
-      console.error(error);
+      this.handleInternalError(error);
       return null;
     }
   }
 
   private async getUserInvalidationTime(
-    user: string | number | Object,
+    user: string | number | Record<any, any>,
   ): Promise<number | null> {
     try {
       const userKey = typeof user === 'string' ? user : JSON.stringify(user);
@@ -79,13 +110,13 @@ export class Jwti implements JwtiAPI {
 
       return invalidationTime ? parseFloat(invalidationTime) : null;
     } catch (error) {
-      console.error(error);
+      this.handleInternalError(error);
       return null;
     }
   }
 
   private async getClientInvalidationTime(
-    client: string | number | Object,
+    client: string | number | Record<any, any>,
   ): Promise<number | null> {
     try {
       const clientKey =
@@ -96,14 +127,14 @@ export class Jwti implements JwtiAPI {
 
       return invalidationTime ? parseFloat(invalidationTime) : null;
     } catch (error) {
-      console.error(error);
+      this.handleInternalError(error);
       return null;
     }
   }
 
   private async getUserClientInvalidationTime(
-    user: string | number | Object,
-    client: string | number | Object,
+    user: string | number | Record<any, any>,
+    client: string | number | Record<any, any>,
   ): Promise<number | null> {
     try {
       const userKey = typeof user === 'string' ? user : JSON.stringify(user);
@@ -115,7 +146,7 @@ export class Jwti implements JwtiAPI {
 
       return invalidationTime ? parseFloat(invalidationTime) : null;
     } catch (error) {
-      console.error(error);
+      this.handleInternalError(error);
       return null;
     }
   }
@@ -126,8 +157,8 @@ export class Jwti implements JwtiAPI {
   }
 
   private async removeUserClientInvalidation(
-    user: string | number | Object,
-    client: string | number | Object,
+    user: string | number | Record<any, any>,
+    client: string | number | Record<any, any>,
   ): Promise<void> {
     try {
       const userKey = typeof user === 'string' ? user : JSON.stringify(user);
@@ -136,38 +167,38 @@ export class Jwti implements JwtiAPI {
       const invalidationKey = `user::${userKey}::client::${clientKey}`;
       await this.redis.del(invalidationKey);
     } catch (error) {
-      console.error(error);
+      this.handleInternalError(error);
     }
   }
 
   private async removeUserInvalidation(
-    user: string | number | Object,
+    user: string | number | Record<any, any>,
   ): Promise<void> {
     try {
       const userKey = typeof user === 'string' ? user : JSON.stringify(user);
       const invalidationKey = `user::${userKey}`;
       await this.redis.del(invalidationKey);
     } catch (error) {
-      console.error(error);
+      this.handleInternalError(error);
     }
   }
 
   private async removeClientInvalidation(
-    client: string | number | Object,
+    client: string | number | Record<any, any>,
   ): Promise<void> {
     try {
       const clientKey =
         typeof client === 'string' ? client : JSON.stringify(client);
-      const invalidationKey = `user::${clientKey}`;
+      const invalidationKey = `client::${clientKey}`;
       await this.redis.del(invalidationKey);
     } catch (error) {
-      console.error(error);
+      this.handleInternalError(error);
     }
   }
 
   private async revertUserClientInvalidation(
-    user: string | number | Object,
-    client: string | number | Object,
+    user: string | number | Record<any, any>,
+    client: string | number | Record<any, any>,
   ): Promise<boolean> {
     if (await this.getUserClientInvalidationTime(user, client)) {
       return await this.removeUserClientInvalidation(user, client), true;
@@ -176,7 +207,7 @@ export class Jwti implements JwtiAPI {
   }
 
   private async revertUserInvalidation(
-    user: string | number | Object,
+    user: string | number | Record<any, any>,
   ): Promise<boolean> {
     if (await this.getUserInvalidationTime(user)) {
       return await this.removeUserInvalidation(user), true;
@@ -185,7 +216,7 @@ export class Jwti implements JwtiAPI {
   }
 
   private async revertClientInvalidation(
-    client: string | number | Object,
+    client: string | number | Record<any, any>,
   ): Promise<boolean> {
     if (await this.getClientInvalidationTime(client)) {
       return await this.removeClientInvalidation(client), true;
@@ -210,9 +241,9 @@ export class Jwti implements JwtiAPI {
    * (for the given parameters)
    *
    */
-  async revert(token: string): Promise<boolean>;
-  async revert(params: Omit<JwtiParams, 'precise'>): Promise<boolean>;
-  async revert(params: any): Promise<boolean> {
+  public async revert(token: string): Promise<boolean>;
+  public async revert(params: Omit<JwtiParams, 'precise'>): Promise<boolean>;
+  public async revert(params: any): Promise<boolean> {
     if (typeof params === 'string') {
       return this.revertTokenInvalidation(params);
     }
@@ -235,10 +266,10 @@ export class Jwti implements JwtiAPI {
   }
 
   private createJwtiHeader = (
-    user?: string | number | Object,
-    client?: string | number | Object,
+    user?: string | number | Record<any, any>,
+    client?: string | number | Record<any, any>,
     iat?: number,
-  ): Object => {
+  ): Record<any, any> => {
     return Object.assign({ user, client, iat });
   };
 
@@ -279,23 +310,23 @@ export class Jwti implements JwtiAPI {
    * remember that this method still returns a promise
    *
    */
-  async sign(
+  public async sign(
     payload: string | object | Buffer,
     secretOrPrivateKey: Jwt.Secret,
     options?: Jwt.SignOptions & JwtiParams,
   ): Promise<string>;
-  async sign(
+  public async sign(
     payload: string | object | Buffer,
     secretOrPrivateKey: Jwt.Secret,
     callback: Jwt.SignCallback,
   ): Promise<void>;
-  async sign(
+  public async sign(
     payload: string | object | Buffer,
     secretOrPrivateKey: Jwt.Secret,
     options: Jwt.SignOptions & JwtiParams,
     callback: Jwt.SignCallback,
   ): Promise<void>;
-  async sign(
+  public async sign(
     payload: any,
     secretOrPrivateKey: any,
     options?: any,
@@ -344,7 +375,7 @@ export class Jwti implements JwtiAPI {
   }
 
   private jwtiParamExists(
-    param: string | number | Object | undefined | null,
+    param: string | number | Record<any, any> | undefined | null,
   ): boolean {
     return param !== null && param !== undefined;
   }
@@ -362,9 +393,9 @@ export class Jwti implements JwtiAPI {
    * **client** eg. {user: 1, client: 'mobile'}
    * @example {user: 1, client: 'mobile'}
    */
-  async invalidate(token: string): Promise<void>;
-  async invalidate(params: Omit<JwtiParams, 'precise'>): Promise<void>;
-  async invalidate(params: any): Promise<void> {
+  public async invalidate(token: string): Promise<void>;
+  public async invalidate(params: Omit<JwtiParams, 'precise'>): Promise<void>;
+  public async invalidate(params: any): Promise<void> {
     if (typeof params === 'string') {
       return this.createTokenInvalidation(params);
     }
@@ -373,15 +404,19 @@ export class Jwti implements JwtiAPI {
 
     if (this.jwtiParamExists(user) && this.jwtiParamExists(client))
       return this.createUserClientInvalidation(
-        user as string | number | Object,
-        client as string | number | Object,
+        user as string | number | Record<any, any>,
+        client as string | number | Record<any, any>,
       );
 
     if (this.jwtiParamExists(user))
-      return this.createUserInvalidation(user as string | number | Object);
+      return this.createUserInvalidation(
+        user as string | number | Record<any, any>,
+      );
 
     if (this.jwtiParamExists(client))
-      return this.createClientInvalidation(client as string | number | Object);
+      return this.createClientInvalidation(
+        client as string | number | Record<any, any>,
+      );
   }
 
   /**
@@ -401,45 +436,45 @@ export class Jwti implements JwtiAPI {
    * **client** eg. {user: 1, client: 'mobile'}
    * @example {user: 1, client: 'mobile'}
    */
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: Jwt.Secret,
     options: Jwt.VerifyOptions & { complete: true },
   ): Promise<Jwt.Jwt>;
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: Jwt.Secret,
     options?: Jwt.VerifyOptions & { complete?: false },
   ): Promise<string | Jwt.JwtPayload>;
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: Jwt.Secret,
     options?: Jwt.VerifyOptions,
   ): Promise<string | Jwt.Jwt | Jwt.JwtPayload>;
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: Jwt.Secret | Jwt.GetPublicKeyOrSecret,
     callback?: Jwt.VerifyCallback<string | Jwt.JwtPayload>,
   ): Promise<void>;
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: Jwt.Secret | Jwt.GetPublicKeyOrSecret,
     options: Jwt.VerifyOptions & { complete: true },
     callback?: Jwt.VerifyCallback<Jwt.Jwt>,
   ): Promise<void>;
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: Jwt.Secret | Jwt.GetPublicKeyOrSecret,
     options?: Jwt.VerifyOptions & { complete?: false },
     callback?: Jwt.VerifyCallback<string | Jwt.JwtPayload>,
   ): Promise<void>;
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: Jwt.Secret | Jwt.GetPublicKeyOrSecret,
     options?: Jwt.VerifyOptions,
     callback?: Jwt.VerifyCallback<string | Jwt.Jwt | Jwt.JwtPayload>,
   ): Promise<void>;
-  async verify(
+  public async verify(
     token: string,
     secretOrPublicKey: any,
     options?: any,
@@ -489,8 +524,8 @@ export class Jwti implements JwtiAPI {
 
     if (this.jwtiParamExists(user) && this.jwtiParamExists(client)) {
       const invalidationTime = await this.getUserClientInvalidationTime(
-        user as string | number | Object,
-        client as string | number | Object,
+        user as string | number | Record<any, any>,
+        client as string | number | Record<any, any>,
       );
       const invalid = invalidationTime && iat - invalidationTime < 0;
 
@@ -504,7 +539,7 @@ export class Jwti implements JwtiAPI {
 
     if (this.jwtiParamExists(user)) {
       const invalidationTime = await this.getUserInvalidationTime(
-        user as string | number | Object,
+        user as string | number | Record<any, any>,
       );
       const invalid = invalidationTime && iat - invalidationTime < 0;
 
@@ -518,7 +553,7 @@ export class Jwti implements JwtiAPI {
 
     if (this.jwtiParamExists(client)) {
       const invalidationTime = await this.getUserInvalidationTime(
-        client as string | number | Object,
+        client as string | number | Record<any, any>,
       );
       const invalid = invalidationTime && iat - invalidationTime < 0;
 
