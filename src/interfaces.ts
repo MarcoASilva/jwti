@@ -1,12 +1,23 @@
 import JWT from 'jsonwebtoken';
 
+export interface JwtiInternals {
+  suppressErrors: boolean;
+  allowLogging: boolean;
+  logger: typeof console.log;
+  errorLogger: typeof console.log;
+}
+
+export interface JwtiOptions {
+  internals?: Partial<JwtiInternals>;
+}
+
 export interface JwtiParams {
-  client?: string | number | Object;
-  user?: string | number | Object;
+  client?: string | number | Record<any, any>;
+  user?: string | number | Record<any, any>;
   precise?: boolean;
 }
 
-export interface JwtiAPI {
+export interface JwtiAPI extends Required<JwtiOptions> {
   invalidate(token: string): Promise<void>;
   invalidate(params: JwtiParams): Promise<void>;
   revert(token: string): Promise<boolean>;
@@ -51,17 +62,17 @@ export interface JwtiAPI {
     callback?: JWT.VerifyCallback,
   ): Promise<void>;
   sign(
-    payload: string | Buffer | object,
+    payload: string | Buffer | Record<any, any>,
     secretOrPrivateKey: JWT.Secret,
     options?: JWT.SignOptions & JwtiParams,
   ): Promise<string>;
   sign(
-    payload: string | Buffer | object,
+    payload: string | Buffer | Record<any, any>,
     secretOrPrivateKey: JWT.Secret,
     callback: JWT.SignCallback,
   ): Promise<void>;
   sign(
-    payload: string | Buffer | object,
+    payload: string | Buffer | Record<any, any>,
     secretOrPrivateKey: JWT.Secret,
     options: JWT.SignOptions & JwtiParams,
     callback: JWT.SignCallback,
