@@ -107,7 +107,7 @@ await jwti.invalidate(token);
 const reverted = await jwti.revert(token);
 
 // Outputs 'payload'
-await jwti.verify(token);
+console.log(await jwti.verify(token));
 ```
 
 ## user
@@ -149,7 +149,7 @@ await jwti.invalidate({ user: 1, client: 'mobile' });
 const reverted = await jwti.revert({ user: 1, client: 'mobile' });
 
 // Outputs 'payload'
-await jwti.verify(token);
+console.log(await jwti.verify(token));
 ```
 
 #
