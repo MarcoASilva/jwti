@@ -49,14 +49,14 @@ export class Jwti implements JwtiAPI {
   }
 
   private async createTokenInvalidation(token: string): Promise<void> {
-    const invalidationTime = +new Date() / 1000;
+    const invalidationTime = +new Date();
     await this.redis.set(token, invalidationTime);
   }
 
   private async createUserInvalidation(
     user: string | number | Record<any, any>,
   ): Promise<void> {
-    const invalidationTime = +new Date() / 1000;
+    const invalidationTime = +new Date();
     const userKey = typeof user === 'string' ? user : JSON.stringify(user);
     const invalidationKey = `user::${userKey}`;
 
@@ -66,7 +66,7 @@ export class Jwti implements JwtiAPI {
   private async createClientInvalidation(
     client: string | number | Record<any, any>,
   ): Promise<void> {
-    const invalidationTime = +new Date() / 1000;
+    const invalidationTime = +new Date();
     const clientKey =
       typeof client === 'string' ? client : JSON.stringify(client);
     const invalidationKey = `client::${clientKey}`;
@@ -78,7 +78,7 @@ export class Jwti implements JwtiAPI {
     user: string | number | Record<any, any>,
     client: string | number | Record<any, any>,
   ): Promise<void> {
-    const invalidationTime = +new Date() / 1000;
+    const invalidationTime = +new Date();
     const userKey = typeof user === 'string' ? user : JSON.stringify(user);
     const clientKey =
       typeof client === 'string' ? client : JSON.stringify(client);
@@ -284,10 +284,6 @@ export class Jwti implements JwtiAPI {
    * where ```client``` and ```user```
    * to be used by Jwti to identify the
    * token later on verify method
-   *
-   * ```precise``` is a boolean flag (defaults to false) to let jwti use its own
-   * ```iat``` header on the token because jsonwebtoken ignore milleseconds when
-   * generating iat
    * @example
    * * You can either pass one or both to identify the token, so you can invalidate it later:
    * ```ts
@@ -335,11 +331,11 @@ export class Jwti implements JwtiAPI {
     const {
       user = undefined,
       client = undefined,
-      precise = false,
+      precise = true,
     } = typeof options === 'object' ? (options as JwtiParams) : {};
 
     const iat =
-      precise || typeof payload !== 'object' ? +new Date() / 1000 : undefined;
+      precise || typeof payload !== 'object' ? +new Date() : undefined;
 
     if (!options || typeof options === 'function') {
       if (!iat)
