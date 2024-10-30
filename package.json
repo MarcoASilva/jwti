@@ -1,6 +1,6 @@
 {
   "name": "jwti",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "jwti provides a way to handle multi token/user/client jwt invalidation",
   "author": "Marco Silva <marco.up.bsi@gmail.com> (https://github.com/MarcoASilva)",
   "homepage": "https://github.com/MarcoASilva/jwti/#readme",
