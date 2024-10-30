@@ -90,7 +90,7 @@ describe('Reversion', () => {
     await jwti.invalidate(token);
 
     try {
-      console.log(await jwti.verify(token, 'SECRET'));
+      await jwti.verify(token, 'SECRET');
     } catch (error) {
       expect(error).toBeInstanceOf(JwtiError);
       expect(error).toBeInstanceOf(InvalidatedTokenError);

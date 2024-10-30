@@ -2,8 +2,11 @@
 
 Invalidate jwt tokens by user, client or user-client combinations.
 
-JWT Invalidation uses [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)
-and [redis](https://www.npmjs.com/package/redis).
+JWT Invalidation requires
+[jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) like and
+[redis](https://www.npmjs.com/package/redis) like clients to work.
+
+This package **DOES NOT** depend **directly** on any package or library.
 
 # Setup
 
@@ -32,11 +35,11 @@ const token = await jwti.sign('payload', 'secret');
 
 await jwti.invalidate(token);
 
-// Throws an InvalidatedTokenError
+// throws an InvalidatedTokenError
 await jwti.verify(token);
 ```
 
-## All tokens of a user
+## all of a user's token
 
 that were signed with jwti
 
@@ -45,11 +48,11 @@ const token = await jwti.sign('payload', 'secret', { user: 1 });
 
 await jwti.invalidate({ user: 1 });
 
-// Throws an InvalidatedTokenError
+// throws an InvalidatedTokenError
 await jwti.verify(token);
 ```
 
-## All tokens of a client
+## all of a client's token
 
 that were signed with jwti
 
@@ -58,11 +61,11 @@ const token = await jwti.sign('payload', 'secret', { client: 'mobile' });
 
 await jwti.invalidate({ client: 'mobile' });
 
-// Throws an InvalidatedTokenError
+// throws an InvalidatedTokenError
 await jwti.verify(token);
 ```
 
-## All tokens for a user-client combination
+## all tokens for a given user AND a given client
 
 that were signed with jwti
 
@@ -74,11 +77,11 @@ const token = await jwti.sign('payload', 'secret', {
 
 await jwti.invalidate({ user: 1, client: 'mobile' });
 
-// Throws an InvalidatedTokenError
+// throws an InvalidatedTokenError
 await jwti.verify(token);
 ```
 
-### Error details
+### error details
 
 ```typescript
 try {
@@ -88,12 +91,12 @@ try {
   console.log(error instanceof InvalidatedTokenError);
   // true
   console.log(error.isJwtiError);
-  // Outputs 'token' | 'user' | 'client' | 'user-client'
+  // outputs 'token' | 'user' | 'client' | 'user-client'
   console.log(error.invalidationType);
 }
 ```
 
-# Reversion
+# reversion
 
 You can revert your invalidations
 
@@ -104,9 +107,12 @@ const token = await jwti.sign('payload', 'secret');
 
 await jwti.invalidate(token);
 
+// would throw an InvalidatedTokenError
+await jwti.verify(token);
+
 const reverted = await jwti.revert(token);
 
-// Outputs 'payload'
+// outputs 'payload'
 console.log(await jwti.verify(token));
 ```
 
@@ -117,9 +123,12 @@ const token = await jwti.sign('payload', 'secret', { user: 1 });
 
 await jwti.invalidate({ user: 1 });
 
+// would throw an InvalidatedTokenError
+await jwti.verify(token);
+
 const reverted = await jwti.revert({ user: 1 });
 
-// Outputs 'payload'
+// outputs 'payload'
 console.log(await jwti.verify(token));
 ```
 
@@ -130,9 +139,12 @@ const token = await jwti.sign('payload', 'secret', { client: 'mobile' });
 
 await jwti.invalidate({ client: 'mobile' });
 
+// would throw an InvalidatedTokenError
+await jwti.verify(token);
+
 const reverted = await jwti.revert({ client: 'mobile' });
 
-// Outputs 'payload'
+// outputs 'payload'
 console.log(await jwti.verify(token));
 ```
 
@@ -146,15 +158,18 @@ const token = await jwti.sign('payload', 'secret', {
 
 await jwti.invalidate({ user: 1, client: 'mobile' });
 
+// would throw an InvalidatedTokenError
+await jwti.verify(token);
+
 const reverted = await jwti.revert({ user: 1, client: 'mobile' });
 
-// Outputs 'payload'
+// outputs 'payload'
 console.log(await jwti.verify(token));
 ```
 
 #
 
-### Quick reminder:
+### reminder:
 
 all new tokens (signed after an invalidation) will be valid
 
@@ -165,9 +180,9 @@ await jwti.invalidate({ user: 1 });
 
 const secondToken = await jwti.sign('payload', 'secret', { user: 1 });
 
-// Throws an InvalidatedTokenError
+// throws an InvalidatedTokenError
 console.log(await jwti.verify(firstToken));
 
-// Outputs 'payload'
+// outputs 'payload'
 console.log(await jwti.verify(secondToken));
 ```

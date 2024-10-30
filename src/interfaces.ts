@@ -1,23 +1,12 @@
 import JWT from 'jsonwebtoken';
 
-export interface JwtiInternals {
-  suppressErrors: boolean;
-  allowLogging: boolean;
-  logger: typeof console.log;
-  errorLogger: typeof console.log;
-}
-
-export interface JwtiOptions {
-  internals?: Partial<JwtiInternals>;
-}
-
 export interface JwtiParams {
   client?: string | number | Record<any, any>;
   user?: string | number | Record<any, any>;
   precise?: boolean;
 }
 
-export interface JwtiAPI extends Required<JwtiOptions> {
+export interface JwtiAPI {
   invalidate(token: string): Promise<void>;
   invalidate(params: JwtiParams): Promise<void>;
   revert(token: string): Promise<boolean>;
