@@ -1,3 +1,7 @@
 {
-  "extends": "@peker"
+  "extends": "@peker",
+  "ignorePatterns": ["*.spec.ts"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off"
+  }
 }

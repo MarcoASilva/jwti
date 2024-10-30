@@ -4,6 +4,8 @@ export class JwtiError extends Error {
   isJwtiError = true;
 }
 
+export class EmptyInvalidationKeyError extends JwtiError {}
+
 export class InvalidatedTokenError extends JwtiError {
   static TYPE_TOKEN: InvalidationType = 'token';
   static TYPE_USER_CLIENT: InvalidationType = 'user-client';

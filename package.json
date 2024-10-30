@@ -1,12 +1,15 @@
 {
   "name": "jwti",
-  "version": "1.0.2",
-  "description": "JWT Invalidation uses \"jsonwebtoken\" and \"redis\" to provide a way to handle multi token/user/client jwt invalidation",
+  "version": "1.1.4",
+  "description": "jwti provides a way to handle multi token/user/client jwt invalidation",
   "author": "Marco Silva <marco.up.bsi@gmail.com> (https://github.com/MarcoASilva)",
   "homepage": "https://github.com/MarcoASilva/jwti/#readme",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/MarcoASilva/jwti/issues"
+  },
+  "engines": {
+    "node": ">14"
   },
   "repository": {
     "type": "git",
@@ -39,19 +42,6 @@
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
-  "peerDependencies": {
-    "ioredis": "^5",
-    "jsonwebtoken": "8.x",
-    "redis": "4.x"
-  },
-  "peerDependenciesMeta": {
-    "redis": {
-      "optional": true
-    },
-    "ioredis": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@peker/eslint-config": "^2.3.1",
     "@peker/prettier-config": "^1.1.0",
@@ -65,6 +55,6 @@
     "redis": "^4.0.4",
     "redis-memory-server": "^0.5.0",
     "ts-jest": "^27.1.3",
-    "typescript": "^4.6.2"
+    "typescript": "^5.6.3"
   }
 }
