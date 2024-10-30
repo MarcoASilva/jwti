@@ -15,6 +15,9 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    env:
+      TAG:
+        ${{ startsWith(github.ref, 'refs/tags/') && github.ref || inputs.tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -24,10 +27,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name:
-            ${{ startsWith(github.ref, 'refs/tags/') && github.ref || inputs.tag
-            }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ env.TAG }}
+          release_name: ${{ env.TAG }}
           body: |
             Automatic release
           draft: false
