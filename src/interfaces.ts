@@ -1,4 +1,4 @@
-import JWT from 'jsonwebtoken';
+import type JWT from 'jsonwebtoken';
 
 export interface JwtiParams {
   client?: string | number | Record<any, any>;

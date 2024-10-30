@@ -3,8 +3,8 @@ import {
   createClient,
   RedisClientType,
   RedisDefaultModules,
+  RedisFunctions,
   RedisModules,
-  RedisScripts,
 } from 'redis';
 import { RedisMemoryServer } from 'redis-memory-server';
 import { Jwti } from '../src';
@@ -13,7 +13,7 @@ import { InvalidatedTokenError, JwtiError } from '../src/errors';
 let redisServer: RedisMemoryServer;
 let redisClient: RedisClientType<
   RedisDefaultModules & RedisModules,
-  RedisScripts
+  RedisFunctions
 >;
 
 const setup = async () => {

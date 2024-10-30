@@ -2,8 +2,8 @@ import type Jwt from 'jsonwebtoken';
 import type {
   RedisClientType,
   RedisDefaultModules,
+  RedisFunctions,
   RedisModules,
-  RedisScripts,
 } from 'redis';
 import { EmptyInvalidationKeyError, InvalidatedTokenError } from './errors';
 import { JwtiAPI, JwtiParams } from './interfaces';
@@ -27,7 +27,7 @@ export class Jwti implements JwtiAPI {
   constructor(
     public jwt: typeof Jwt,
     private redis:
-      | RedisClientType<RedisDefaultModules & RedisModules, RedisScripts>
+      | RedisClientType<RedisDefaultModules & RedisModules, RedisFunctions>
       | Redis,
     private throwInternalErrors = false,
   ) {}
