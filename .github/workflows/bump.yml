@@ -7,15 +7,20 @@ on:
 
 jobs:
   bump:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.ACTIONS_PAT }}
       - run: cat ./package.json
       - uses: 'phips28/gh-action-bump-version@master'
         id: version-bump
         env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          bump-policy: 'last-commit'
           tag-prefix: 'v'
           commit-message: 'CI: bumps version to {{version}} [skip ci]'
       - run: echo "new tag $NEW_TAG"
